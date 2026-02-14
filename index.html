@@ -812,8 +812,7 @@
       const tagContainer = document.getElementById('tag-pills');
       const tagSection = document.getElementById('tag-filters');
       tagSection.style.display = sortedTags.length ? 'flex' : 'none';
-      const totalTags = sortedTags.reduce((s, [, c]) => s + c, 0);
-      tagContainer.innerHTML = `<button class="tag-pill${!activeTag ? ' active' : ''}" data-tag="">All <span style="opacity:0.5">${totalTags}</span></button>` + sortedTags.map(([tag, count]) =>
+      tagContainer.innerHTML = `<button class="tag-pill${!activeTag ? ' active' : ''}" data-tag="">All <span style="opacity:0.5">${filtered.length}</span></button>` + sortedTags.map(([tag, count]) =>
         `<button class="tag-pill${activeTag === tag ? ' active' : ''}" data-tag="${esc(tag)}">${esc(tag)} <span style="opacity:0.5">${count}</span></button>`
       ).join('');
 
@@ -821,8 +820,7 @@
       const langContainer = document.getElementById('lang-pills');
       const langSection = document.getElementById('lang-filters');
       langSection.style.display = sortedLangs.length ? 'flex' : 'none';
-      const totalLangs = sortedLangs.reduce((s, [, c]) => s + c, 0);
-      langContainer.innerHTML = `<button class="lang-pill${!activeLang ? ' active' : ''}" data-lang="">All <span style="opacity:0.5">${totalLangs}</span></button>` + sortedLangs.map(([lang, count]) =>
+      langContainer.innerHTML = `<button class="lang-pill${!activeLang ? ' active' : ''}" data-lang="">All <span style="opacity:0.5">${filtered.length}</span></button>` + sortedLangs.map(([lang, count]) =>
         `<button class="lang-pill${activeLang === lang ? ' active' : ''}" data-lang="${esc(lang)}">${esc(langName(lang))} <span style="opacity:0.5">${count}</span></button>`
       ).join('');
     }
