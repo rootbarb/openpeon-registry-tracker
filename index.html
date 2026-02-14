@@ -828,8 +828,9 @@
         const date = new Date(pr.created_at);
         const ago = timeAgo(date);
         let previewLink = '';
-        if (pr._source_repo && !pr._source_path) {
-          const previewUrl = `${PREVIEW_BASE}#${encodeURIComponent(pr._source_repo)}`;
+        if (pr._source_repo) {
+          const previewPath = pr._source_repo + (pr._source_path ? '/' + pr._source_path : '');
+          const previewUrl = `${PREVIEW_BASE}#${encodeURIComponent(previewPath)}`;
           previewLink = `<a class="pr-preview-link" href="${esc(previewUrl)}" target="_blank" onclick="event.stopPropagation()">preview &rarr;</a>`;
         }
         return `
@@ -886,8 +887,8 @@
 
       container.innerHTML = packs.map(pack => {
         const repoUrl = `https://github.com/${esc(pack.source_repo)}`;
-        const canPreview = !pack.source_path;
-        const previewUrl = canPreview ? `${PREVIEW_BASE}#${encodeURIComponent(pack.source_repo)}` : null;
+        const previewPath = pack.source_repo + (pack.source_path ? '/' + pack.source_path : '');
+        const previewUrl = `${PREVIEW_BASE}#${encodeURIComponent(previewPath)}`;
         const cats = pack.categories || [];
         const coreCount = cats.filter(c => CORE_CATEGORIES.includes(c)).length;
         const extCount = cats.filter(c => EXTENDED_CATEGORIES.includes(c)).length;
@@ -923,7 +924,7 @@
                 ${pack.language ? `<span class="lang-badge">${esc(langName(pack.language))}</span>` : ''}
               </div>
             </div>
-            ${previewUrl ? `<a class="preview-link" href="${previewUrl}" target="_blank" style="margin-top:0.5rem;">preview &rarr;</a>` : ''}
+            <a class="preview-link" href="${previewUrl}" target="_blank" style="margin-top:0.5rem;">preview &rarr;</a>
           </div>
         `;
       }).join('');
