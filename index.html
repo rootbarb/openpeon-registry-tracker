@@ -651,6 +651,35 @@
       document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       currentFilter = btn.dataset.filter;
+      buildFilterPills();
+      renderPacks();
+    });
+
+    // Tag pill clicks (delegated, attached once)
+    document.getElementById('tag-pills').addEventListener('click', e => {
+      const pill = e.target.closest('.tag-pill');
+      if (!pill) return;
+      const tag = pill.dataset.tag;
+      if (activeTag === tag) {
+        activeTag = null;
+      } else {
+        activeTag = tag;
+      }
+      buildFilterPills();
+      renderPacks();
+    });
+
+    // Lang pill clicks (delegated, attached once)
+    document.getElementById('lang-pills').addEventListener('click', e => {
+      const pill = e.target.closest('.lang-pill');
+      if (!pill) return;
+      const lang = pill.dataset.lang;
+      if (activeLang === lang) {
+        activeLang = null;
+      } else {
+        activeLang = lang;
+      }
+      buildFilterPills();
       renderPacks();
     });
 
@@ -710,10 +739,15 @@
     }
 
     function buildFilterPills() {
-      // Collect all unique tags with counts
+      // Count tags and langs from tier-filtered packs
+      let filtered = allPacks;
+      if (currentFilter !== 'all') {
+        filtered = filtered.filter(p => p.trust_tier === currentFilter);
+      }
+
       const tagCounts = {};
       const langCounts = {};
-      for (const p of allPacks) {
+      for (const p of filtered) {
         for (const t of (p.tags || [])) {
           tagCounts[t] = (tagCounts[t] || 0) + 1;
         }
@@ -722,57 +756,28 @@
         }
       }
 
-      // Sort tags by count descending
       const sortedTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]);
       const sortedLangs = Object.entries(langCounts).sort((a, b) => b[1] - a[1]);
+
+      // Clear active tag/lang if they no longer exist in filtered set
+      if (activeTag && !tagCounts[activeTag]) activeTag = null;
+      if (activeLang && !langCounts[activeLang]) activeLang = null;
 
       // Render tag pills
       const tagContainer = document.getElementById('tag-pills');
       const tagSection = document.getElementById('tag-filters');
-      if (sortedTags.length) {
-        tagSection.style.display = 'flex';
-        tagContainer.innerHTML = sortedTags.map(([tag, count]) =>
-          `<button class="tag-pill" data-tag="${esc(tag)}">${esc(tag)} <span style="opacity:0.5">${count}</span></button>`
-        ).join('');
-        tagContainer.addEventListener('click', e => {
-          const pill = e.target.closest('.tag-pill');
-          if (!pill) return;
-          const tag = pill.dataset.tag;
-          if (activeTag === tag) {
-            activeTag = null;
-            pill.classList.remove('active');
-          } else {
-            activeTag = tag;
-            tagContainer.querySelectorAll('.tag-pill').forEach(p => p.classList.remove('active'));
-            pill.classList.add('active');
-          }
-          renderPacks();
-        });
-      }
+      tagSection.style.display = sortedTags.length ? 'flex' : 'none';
+      tagContainer.innerHTML = sortedTags.map(([tag, count]) =>
+        `<button class="tag-pill${activeTag === tag ? ' active' : ''}" data-tag="${esc(tag)}">${esc(tag)} <span style="opacity:0.5">${count}</span></button>`
+      ).join('');
 
       // Render lang pills
       const langContainer = document.getElementById('lang-pills');
       const langSection = document.getElementById('lang-filters');
-      if (sortedLangs.length) {
-        langSection.style.display = 'flex';
-        langContainer.innerHTML = sortedLangs.map(([lang, count]) =>
-          `<button class="lang-pill" data-lang="${esc(lang)}">${esc(langName(lang))} <span style="opacity:0.5">${count}</span></button>`
-        ).join('');
-        langContainer.addEventListener('click', e => {
-          const pill = e.target.closest('.lang-pill');
-          if (!pill) return;
-          const lang = pill.dataset.lang;
-          if (activeLang === lang) {
-            activeLang = null;
-            pill.classList.remove('active');
-          } else {
-            activeLang = lang;
-            langContainer.querySelectorAll('.lang-pill').forEach(p => p.classList.remove('active'));
-            pill.classList.add('active');
-          }
-          renderPacks();
-        });
-      }
+      langSection.style.display = sortedLangs.length ? 'flex' : 'none';
+      langContainer.innerHTML = sortedLangs.map(([lang, count]) =>
+        `<button class="lang-pill${activeLang === lang ? ' active' : ''}" data-lang="${esc(lang)}">${esc(langName(lang))} <span style="opacity:0.5">${count}</span></button>`
+      ).join('');
     }
 
     function renderPRs() {
