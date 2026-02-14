@@ -290,6 +290,9 @@
       align-items: center;
       gap: 1rem;
       transition: border-color 0.2s;
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
     }
 
     .pr-card:hover { border-color: #d29922; }
@@ -794,17 +797,16 @@
         const date = new Date(pr.created_at);
         const ago = timeAgo(date);
         return `
-          <div class="pr-card">
+          <a class="pr-card" href="${esc(pr.html_url)}" target="_blank">
             <div class="pr-icon">${PR_SVG}</div>
             <div class="pr-info">
-              <div class="pr-title"><a href="${esc(pr.html_url)}" target="_blank">${esc(pr.title)}</a></div>
+              <div class="pr-title">${esc(pr.title)}</div>
               <div class="pr-meta">
-                #${pr.number} opened ${ago} by
-                <a href="https://github.com/${esc(pr.user.login)}" target="_blank">${esc(pr.user.login)}</a>
+                #${pr.number} opened ${ago} by ${esc(pr.user.login)}
               </div>
             </div>
             <div class="pr-badge">Open</div>
-          </div>
+          </a>
         `;
       }).join('');
     }
