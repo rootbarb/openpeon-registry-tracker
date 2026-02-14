@@ -152,6 +152,68 @@
     .filter-btn:hover { border-color: #ffab01; color: #e6edf3; }
     .filter-btn.active { border-color: #ffab01; color: #ffab01; background: #1a1a0d; }
 
+    .filter-group {
+      max-width: 900px;
+      margin: 0 auto 0.75rem;
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-group-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      color: #484f58;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding-top: 0.5rem;
+      flex-shrink: 0;
+      width: 40px;
+    }
+
+    .filter-group-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      flex: 1;
+    }
+
+    .tag-pill {
+      padding: 0.3rem 0.7rem;
+      border: 1px solid #21262d;
+      border-radius: 14px;
+      background: #0d1117;
+      color: #7d8590;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .tag-pill:hover { border-color: #ffab01; color: #e6edf3; }
+    .tag-pill.active { border-color: #ffab01; color: #ffab01; background: #1a1a0d; }
+
+    .lang-pill {
+      padding: 0.3rem 0.7rem;
+      border: 1px solid #9e6a03;
+      border-radius: 14px;
+      background: #0d1117;
+      color: #d29922;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .lang-pill:hover { background: #1a1a0d; }
+    .lang-pill.active { background: #1a1a0d; border-color: #ffab01; color: #ffab01; }
+
     .search-bar {
       max-width: 500px;
       margin: 0 auto 1.5rem;
@@ -512,6 +574,14 @@
       <button class="filter-btn" data-filter="verified">Verified</button>
       <button class="filter-btn" data-filter="community">Community</button>
     </div>
+    <div id="tag-filters" class="filter-group" style="display:none;">
+      <span class="filter-group-label">Tags</span>
+      <div id="tag-pills" class="filter-group-pills"></div>
+    </div>
+    <div id="lang-filters" class="filter-group" style="display:none;">
+      <span class="filter-group-label">Lang</span>
+      <div id="lang-pills" class="filter-group-pills"></div>
+    </div>
     <div class="search-bar">
       <input type="text" id="search-input" placeholder="Search packs by name, author, tag..." />
     </div>
@@ -548,6 +618,8 @@
     let allPRs = [];
     let currentFilter = 'all';
     let searchQuery = '';
+    let activeTag = null;
+    let activeLang = null;
 
     // Init
     loadAll();
@@ -608,6 +680,7 @@
         document.getElementById('pr-section').style.display = 'block';
         document.getElementById('packs-section').style.display = 'block';
 
+        buildFilterPills();
         renderPRs();
         renderPacks();
 
@@ -620,6 +693,72 @@
       }
 
       if (btn) btn.disabled = false;
+    }
+
+    function buildFilterPills() {
+      // Collect all unique tags with counts
+      const tagCounts = {};
+      const langCounts = {};
+      for (const p of allPacks) {
+        for (const t of (p.tags || [])) {
+          tagCounts[t] = (tagCounts[t] || 0) + 1;
+        }
+        if (p.language) {
+          langCounts[p.language] = (langCounts[p.language] || 0) + 1;
+        }
+      }
+
+      // Sort tags by count descending
+      const sortedTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]);
+      const sortedLangs = Object.entries(langCounts).sort((a, b) => b[1] - a[1]);
+
+      // Render tag pills
+      const tagContainer = document.getElementById('tag-pills');
+      const tagSection = document.getElementById('tag-filters');
+      if (sortedTags.length) {
+        tagSection.style.display = 'flex';
+        tagContainer.innerHTML = sortedTags.map(([tag, count]) =>
+          `<button class="tag-pill" data-tag="${esc(tag)}">${esc(tag)} <span style="opacity:0.5">${count}</span></button>`
+        ).join('');
+        tagContainer.addEventListener('click', e => {
+          const pill = e.target.closest('.tag-pill');
+          if (!pill) return;
+          const tag = pill.dataset.tag;
+          if (activeTag === tag) {
+            activeTag = null;
+            pill.classList.remove('active');
+          } else {
+            activeTag = tag;
+            tagContainer.querySelectorAll('.tag-pill').forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+          }
+          renderPacks();
+        });
+      }
+
+      // Render lang pills
+      const langContainer = document.getElementById('lang-pills');
+      const langSection = document.getElementById('lang-filters');
+      if (sortedLangs.length) {
+        langSection.style.display = 'flex';
+        langContainer.innerHTML = sortedLangs.map(([lang, count]) =>
+          `<button class="lang-pill" data-lang="${esc(lang)}">${esc(lang)} <span style="opacity:0.5">${count}</span></button>`
+        ).join('');
+        langContainer.addEventListener('click', e => {
+          const pill = e.target.closest('.lang-pill');
+          if (!pill) return;
+          const lang = pill.dataset.lang;
+          if (activeLang === lang) {
+            activeLang = null;
+            pill.classList.remove('active');
+          } else {
+            activeLang = lang;
+            langContainer.querySelectorAll('.lang-pill').forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+          }
+          renderPacks();
+        });
+      }
     }
 
     function renderPRs() {
@@ -660,6 +799,16 @@
       // Filter by tier
       if (currentFilter !== 'all') {
         packs = packs.filter(p => p.trust_tier === currentFilter);
+      }
+
+      // Filter by tag
+      if (activeTag) {
+        packs = packs.filter(p => (p.tags || []).includes(activeTag));
+      }
+
+      // Filter by language
+      if (activeLang) {
+        packs = packs.filter(p => p.language === activeLang);
       }
 
       // Filter by search
