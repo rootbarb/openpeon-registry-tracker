@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenPeon Registry Tracker</title>
+  <link rel="icon" type="image/png" href="https://peonping.com/images/peon-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    @font-face {
+      font-family: 'Friz Quadrata';
+      src: url('https://peonping.com/fonts/FRIZQT__.TTF') format('truetype');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: #000;
+      color: #e6edf3;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    .atmosphere {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .atmosphere-orb {
+      position: absolute;
+      top: 30%;
+      left: 50%;
+      width: 900px;
+      height: 900px;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background: radial-gradient(circle,
+        rgba(255,171,1,0.45) 0%,
+        rgba(255,171,1,0.25) 20%,
+        rgba(82,214,252,0.2) 50%,
+        transparent 75%);
+      filter: blur(100px);
+    }
+
+    h1 {
+      font-family: 'Friz Quadrata', 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+      text-align: center;
+      font-size: 1.8rem;
+      margin-bottom: 0.3rem;
+      position: relative;
+      z-index: 1;
+      text-shadow: 2px 2px 0 rgba(0,0,0,0.92), 0 0 12px rgba(255,171,1,0.3);
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #7d8590;
+      margin-bottom: 2rem;
+      font-size: 0.9rem;
+      position: relative;
+      z-index: 1;
+      text-shadow: 1px 1px 0 rgba(0,0,0,0.92);
+    }
+
+    .top-nav {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: #484f58;
+      font-size: 0.8rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .top-nav a { color: #ffab01; text-decoration: none; }
+    .top-nav a:hover { text-decoration: underline; }
+    .top-nav .nav-icon {
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 0.2em;
+      position: relative;
+      top: -1px;
+    }
+    .top-nav .peon-icon {
+      width: 14px;
+      height: 14px;
+      vertical-align: middle;
+      margin-right: 0.2em;
+      position: relative;
+      top: -1px;
+    }
+
+    .stats-bar {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-bottom: 2rem;
+      position: relative;
+      z-index: 1;
+      flex-wrap: wrap;
+    }
+
+    .stat-box {
+      text-align: center;
+    }
+
+    .stat-number {
+      font-family: 'Friz Quadrata', 'Palatino Linotype', serif;
+      font-size: 2rem;
+      text-shadow: 2px 2px 0 rgba(0,0,0,0.92), 0 0 12px rgba(255,171,1,0.3);
+    }
+
+    .stat-number.gold { color: #ffab01; }
+    .stat-number.green { color: #3fb950; }
+    .stat-number.yellow { color: #d29922; }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: #7d8590;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .filter-bar {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      position: relative;
+      z-index: 1;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      padding: 0.4rem 1rem;
+      border: 1px solid #30363d;
+      border-radius: 20px;
+      background: #161b22;
+      color: #7d8590;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-btn:hover { border-color: #ffab01; color: #e6edf3; }
+    .filter-btn.active { border-color: #ffab01; color: #ffab01; background: #1a1a0d; }
+
+    .search-bar {
+      max-width: 500px;
+      margin: 0 auto 1.5rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .search-bar input {
+      width: 100%;
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      border: 1px solid #30363d;
+      background: #161b22;
+      color: #e6edf3;
+      font-size: 0.85rem;
+      outline: none;
+    }
+
+    .search-bar input:focus { border-color: #58a6ff; }
+    .search-bar input::placeholder { color: #484f58; }
+
+    #status {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      font-size: 0.9rem;
+      min-height: 1.4em;
+      position: relative;
+      z-index: 1;
+    }
+
+    .status-error { color: #f85149; }
+    .status-ok { color: #3fb950; }
+    .status-loading { color: #d29922; }
+
+    .section-header {
+      font-family: 'Friz Quadrata', 'Palatino Linotype', serif;
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+      position: relative;
+      z-index: 1;
+      text-shadow: 2px 2px 0 rgba(0,0,0,0.92), 0 0 12px rgba(255,171,1,0.3);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .section-header .count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: #7d8590;
+      font-weight: 400;
+    }
+
+    .section {
+      max-width: 1200px;
+      margin: 0 auto 2.5rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* PR Cards */
+    .pr-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .pr-card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      padding: 1rem 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      transition: border-color 0.2s;
+    }
+
+    .pr-card:hover { border-color: #d29922; }
+
+    .pr-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #1a2b1a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .pr-icon svg { color: #3fb950; }
+
+    .pr-info { flex: 1; min-width: 0; }
+
+    .pr-title {
+      font-size: 0.95rem;
+      font-weight: 500;
+      margin-bottom: 0.2rem;
+    }
+
+    .pr-title a {
+      color: #e6edf3;
+      text-decoration: none;
+    }
+
+    .pr-title a:hover { color: #ffab01; text-decoration: underline; }
+
+    .pr-meta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: #7d8590;
+    }
+
+    .pr-meta a { color: #7d8590; text-decoration: none; }
+    .pr-meta a:hover { color: #ffab01; }
+
+    .pr-badge {
+      padding: 0.2rem 0.6rem;
+      border-radius: 12px;
+      font-size: 0.7rem;
+      font-weight: 500;
+      white-space: nowrap;
+      flex-shrink: 0;
+      background: #1a2b1a;
+      color: #3fb950;
+      border: 1px solid #238636;
+    }
+
+    .no-prs {
+      text-align: center;
+      padding: 2rem;
+      color: #484f58;
+      font-size: 0.9rem;
+    }
+
+    /* Pack Grid */
+    .pack-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .pack-card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      padding: 1rem 1.2rem;
+      transition: border-color 0.2s;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .pack-card:hover { border-color: #ffab01; }
+
+    .pack-name {
+      font-family: 'Friz Quadrata', 'Palatino Linotype', serif;
+      font-size: 1rem;
+      margin-bottom: 0.15rem;
+      text-shadow: 1px 1px 0 rgba(0,0,0,0.92);
+    }
+
+    .pack-name a {
+      color: #e6edf3;
+      text-decoration: none;
+    }
+
+    .pack-name a:hover { color: #ffab01; }
+
+    .pack-desc {
+      font-size: 0.8rem;
+      color: #7d8590;
+      margin-bottom: 0.6rem;
+      flex: 1;
+    }
+
+    .pack-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .pack-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6rem;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      background: #0d1117;
+      color: #7d8590;
+      border: 1px solid #21262d;
+    }
+
+    .pack-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .pack-meta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      color: #484f58;
+    }
+
+    .pack-badges {
+      display: flex;
+      gap: 0.3rem;
+      flex-wrap: wrap;
+    }
+
+    .tier-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .tier-badge.official { background: #1a2b1a; color: #3fb950; border: 1px solid #238636; }
+    .tier-badge.verified { background: #1a1a2b; color: #58a6ff; border: 1px solid #1f6feb; }
+    .tier-badge.community { background: #2b1a2b; color: #bc8cff; border: 1px solid #8b5cf6; }
+
+    .lang-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 10px;
+      background: #1a1a0d;
+      color: #d29922;
+      border: 1px solid #9e6a03;
+      text-transform: uppercase;
+    }
+
+    .category-dots {
+      display: flex;
+      gap: 0.2rem;
+      margin-bottom: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    .cat-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #238636;
+      position: relative;
+    }
+
+    .cat-dot.extended { background: #9e6a03; }
+
+    .cat-dot[title]:hover::after {
+      content: attr(title);
+      position: absolute;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.6rem;
+      white-space: nowrap;
+      background: #161b22;
+      border: 1px solid #30363d;
+      color: #e6edf3;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .preview-link {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      color: #ffab01;
+      text-decoration: none;
+    }
+
+    .preview-link:hover { text-decoration: underline; }
+
+    .refresh-btn {
+      padding: 0.5rem 1.2rem;
+      border: 5px solid transparent;
+      border-image-source: url('https://peonping.com/textures/button-bg.webp');
+      border-image-slice: 16 fill;
+      border-image-repeat: stretch;
+      image-rendering: pixelated;
+      background: transparent;
+      color: #e6edf3;
+      font-family: 'Friz Quadrata', 'Palatino Linotype', serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-shadow: 1px 1px 0 rgba(0,0,0,0.92);
+      transition: filter 0.2s;
+      position: relative;
+      z-index: 1;
+    }
+
+    .refresh-btn:hover { filter: brightness(1.2); }
+    .refresh-btn:disabled { opacity: 0.5; cursor: wait; }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .last-updated {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: #484f58;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      position: relative;
+      z-index: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="atmosphere"><div class="atmosphere-orb"></div></div>
+  <div class="top-nav">
+    <div><a href="https://www.peonping.com"><img class="peon-icon" src="https://peonping.com/images/peon-icon.png" alt="">peon-ping</a> &middot; <a href="https://github.com/PeonPing/registry"><svg class="nav-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>PeonPing/registry</a></div>
+    <div><a href="https://openpeon.com"><img class="peon-icon" src="https://openpeon.com/favicon.ico" alt="">CESP spec</a> &middot; <a href="https://rootbarb.github.io/openpeon-preview/">preview tool</a></div>
+    <div>by <a href="https://github.com/rootbarb"><svg class="nav-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>rootbarb</a></div>
+  </div>
+
+  <h1>OpenPeon Registry Tracker</h1>
+  <p class="subtitle">Live status of accepted and pending CESP sound packs</p>
+
+  <div id="status" class="status-loading">Loading registry data...</div>
+  <div id="last-updated" class="last-updated"></div>
+
+  <div id="stats-bar" class="stats-bar" style="display:none;">
+    <div class="stat-box">
+      <div class="stat-number gold" id="stat-total">0</div>
+      <div class="stat-label">Total Packs</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number green" id="stat-official">0</div>
+      <div class="stat-label">Official</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number yellow" id="stat-community">0</div>
+      <div class="stat-label">Community</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number yellow" id="stat-pending">0</div>
+      <div class="stat-label">Pending PRs</div>
+    </div>
+  </div>
+
+  <div id="filter-section" style="display:none;">
+    <div class="filter-bar">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="official">Official</button>
+      <button class="filter-btn" data-filter="verified">Verified</button>
+      <button class="filter-btn" data-filter="community">Community</button>
+    </div>
+    <div class="search-bar">
+      <input type="text" id="search-input" placeholder="Search packs by name, author, tag..." />
+    </div>
+  </div>
+
+  <!-- Pending PRs Section -->
+  <div id="pr-section" class="section" style="display:none;">
+    <div class="header-row">
+      <div class="section-header">Pending Submissions <span class="count" id="pr-count"></span></div>
+    </div>
+    <div id="pr-list" class="pr-list"></div>
+  </div>
+
+  <!-- Accepted Packs Section -->
+  <div id="packs-section" class="section" style="display:none;">
+    <div class="header-row">
+      <div class="section-header">Accepted Packs <span class="count" id="packs-count"></span></div>
+      <button class="refresh-btn" id="refresh-btn" onclick="loadAll()">Refresh</button>
+    </div>
+    <div id="pack-grid" class="pack-grid"></div>
+  </div>
+
+  <script>
+    const REGISTRY_URL = 'https://peonping.github.io/registry/index.json';
+    const REGISTRY_REPO = 'PeonPing/registry';
+    const PREVIEW_BASE = 'https://rootbarb.github.io/openpeon-preview/';
+    const GH_SVG = '<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>';
+    const PR_SVG = '<svg width="16" height="16" viewBox="0 0 16 16" fill="#3fb950"><path d="M7.177 3.073L9.573.677A.25.25 0 0110 .854v4.792a.25.25 0 01-.427.177L7.177 3.427a.25.25 0 010-.354zM3.75 2.5a.75.75 0 100 1.5.75.75 0 000-1.5zm-2.25.75a2.25 2.25 0 113 2.122v5.256a2.251 2.251 0 11-1.5 0V5.372A2.25 2.25 0 011.5 3.25zM11 2.5h-1V4h1a1 1 0 011 1v5.628a2.251 2.251 0 101.5 0V5A2.5 2.5 0 0011 2.5zm1 10.25a.75.75 0 111.5 0 .75.75 0 01-1.5 0zM3.75 12a.75.75 0 100 1.5.75.75 0 000-1.5z"/></svg>';
+
+    const CORE_CATEGORIES = ['session.start', 'task.acknowledge', 'task.complete', 'task.error', 'input.required', 'resource.limit'];
+    const EXTENDED_CATEGORIES = ['user.spam', 'session.end', 'task.progress'];
+
+    let allPacks = [];
+    let allPRs = [];
+    let currentFilter = 'all';
+    let searchQuery = '';
+
+    // Init
+    loadAll();
+
+    // Search
+    document.getElementById('search-input').addEventListener('input', e => {
+      searchQuery = e.target.value.toLowerCase();
+      renderPacks();
+    });
+
+    // Filter buttons
+    document.querySelector('.filter-bar').addEventListener('click', e => {
+      const btn = e.target.closest('.filter-btn');
+      if (!btn) return;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentFilter = btn.dataset.filter;
+      renderPacks();
+    });
+
+    async function loadAll() {
+      const btn = document.getElementById('refresh-btn');
+      const status = document.getElementById('status');
+      if (btn) btn.disabled = true;
+      status.className = 'status-loading';
+      status.textContent = 'Fetching registry and pull requests...';
+
+      try {
+        const [registryRes, prsRes] = await Promise.all([
+          fetch(REGISTRY_URL),
+          fetch(`https://api.github.com/repos/${REGISTRY_REPO}/pulls?state=open&per_page=100`)
+        ]);
+
+        if (!registryRes.ok) throw new Error('Failed to fetch registry');
+
+        const registry = await registryRes.json();
+        allPacks = registry.packs || [];
+
+        // PRs — handle rate limiting gracefully
+        if (prsRes.ok) {
+          allPRs = await prsRes.json();
+        } else {
+          allPRs = [];
+        }
+
+        // Update stats
+        const official = allPacks.filter(p => p.trust_tier === 'official').length;
+        const community = allPacks.filter(p => p.trust_tier === 'community').length;
+        const verified = allPacks.filter(p => p.trust_tier === 'verified').length;
+
+        document.getElementById('stat-total').textContent = allPacks.length;
+        document.getElementById('stat-official').textContent = official;
+        document.getElementById('stat-community').textContent = community + verified;
+        document.getElementById('stat-pending').textContent = allPRs.length;
+
+        document.getElementById('stats-bar').style.display = 'flex';
+        document.getElementById('filter-section').style.display = 'block';
+        document.getElementById('pr-section').style.display = 'block';
+        document.getElementById('packs-section').style.display = 'block';
+
+        renderPRs();
+        renderPacks();
+
+        status.className = 'status-ok';
+        status.textContent = `Loaded ${allPacks.length} accepted packs and ${allPRs.length} pending PR${allPRs.length !== 1 ? 's' : ''}`;
+        document.getElementById('last-updated').textContent = `Last refreshed: ${new Date().toLocaleString()}`;
+      } catch (err) {
+        status.className = 'status-error';
+        status.textContent = `Error: ${err.message}`;
+      }
+
+      if (btn) btn.disabled = false;
+    }
+
+    function renderPRs() {
+      const container = document.getElementById('pr-list');
+      const countEl = document.getElementById('pr-count');
+      countEl.textContent = `(${allPRs.length})`;
+
+      if (!allPRs.length) {
+        container.innerHTML = '<div class="no-prs">No pending submissions right now</div>';
+        return;
+      }
+
+      container.innerHTML = allPRs.map(pr => {
+        const date = new Date(pr.created_at);
+        const ago = timeAgo(date);
+        return `
+          <div class="pr-card">
+            <div class="pr-icon">${PR_SVG}</div>
+            <div class="pr-info">
+              <div class="pr-title"><a href="${esc(pr.html_url)}" target="_blank">${esc(pr.title)}</a></div>
+              <div class="pr-meta">
+                #${pr.number} opened ${ago} by
+                <a href="https://github.com/${esc(pr.user.login)}" target="_blank">${esc(pr.user.login)}</a>
+              </div>
+            </div>
+            <div class="pr-badge">Open</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderPacks() {
+      const container = document.getElementById('pack-grid');
+      const countEl = document.getElementById('packs-count');
+
+      let packs = allPacks;
+
+      // Filter by tier
+      if (currentFilter !== 'all') {
+        packs = packs.filter(p => p.trust_tier === currentFilter);
+      }
+
+      // Filter by search
+      if (searchQuery) {
+        packs = packs.filter(p => {
+          const haystack = [
+            p.name, p.display_name, p.description,
+            p.author?.name, p.author?.github,
+            ...(p.tags || []),
+            p.language
+          ].filter(Boolean).join(' ').toLowerCase();
+          return haystack.includes(searchQuery);
+        });
+      }
+
+      countEl.textContent = `(${packs.length})`;
+
+      container.innerHTML = packs.map(pack => {
+        const repoUrl = `https://github.com/${esc(pack.source_repo)}`;
+        const previewUrl = `${PREVIEW_BASE}#${encodeURIComponent(pack.source_repo + (pack.source_path ? '/' + pack.source_path : ''))}`;
+        const cats = pack.categories || [];
+        const coreCount = cats.filter(c => CORE_CATEGORIES.includes(c)).length;
+        const extCount = cats.filter(c => EXTENDED_CATEGORIES.includes(c)).length;
+
+        const dots = cats.map(c => {
+          const isCore = CORE_CATEGORIES.includes(c);
+          return `<span class="cat-dot${isCore ? '' : ' extended'}" title="${esc(c)}"></span>`;
+        }).join('');
+
+        const tags = (pack.tags || []).slice(0, 5).map(t =>
+          `<span class="pack-tag">${esc(t)}</span>`
+        ).join('');
+
+        const meta = [];
+        if (pack.sound_count) meta.push(`${pack.sound_count} sounds`);
+        if (pack.total_size_bytes) meta.push(formatBytes(pack.total_size_bytes));
+        if (pack.version) meta.push(`v${pack.version}`);
+
+        return `
+          <div class="pack-card" data-tier="${esc(pack.trust_tier)}">
+            <div class="pack-name">
+              <a href="${repoUrl}" target="_blank">${esc(pack.display_name || pack.name)}</a>
+            </div>
+            <div class="pack-desc">${esc(pack.description || '')}</div>
+            ${tags ? `<div class="pack-tags">${tags}</div>` : ''}
+            <div class="category-dots" title="${coreCount}/6 core, ${extCount}/3 extended">${dots}</div>
+            <div class="pack-footer">
+              <div class="pack-meta">
+                ${esc(pack.author?.name || pack.author?.github || 'unknown')} &middot; ${meta.join(' &middot; ')}
+              </div>
+              <div class="pack-badges">
+                <span class="tier-badge ${esc(pack.trust_tier)}">${esc(pack.trust_tier)}</span>
+                ${pack.language ? `<span class="lang-badge">${esc(pack.language)}</span>` : ''}
+              </div>
+            </div>
+            <a class="preview-link" href="${previewUrl}" target="_blank" style="margin-top:0.5rem;">preview &rarr;</a>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function timeAgo(date) {
+      const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+      if (seconds < 60) return 'just now';
+      const minutes = Math.floor(seconds / 60);
+      if (minutes < 60) return `${minutes}m ago`;
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) return `${hours}h ago`;
+      const days = Math.floor(hours / 24);
+      if (days === 1) return 'yesterday';
+      if (days < 30) return `${days}d ago`;
+      return date.toLocaleDateString();
+    }
+
+    function formatBytes(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    function esc(s) {
+      if (!s) return '';
+      const d = document.createElement('div');
+      d.textContent = String(s);
+      return d.innerHTML;
+    }
+  </script>
+</body>
+</html>
