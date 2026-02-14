@@ -346,6 +346,20 @@
       border: 1px solid #238636;
     }
 
+    .pr-preview-link {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      color: #ffab01;
+      text-decoration: none;
+      flex-shrink: 0;
+      padding: 0.3rem 0.6rem;
+      border: 1px solid #ffab01;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    .pr-preview-link:hover { background: #1a1a0d; }
+
     .no-prs {
       text-align: center;
       padding: 2rem;
@@ -707,6 +721,23 @@
         // PRs — handle rate limiting gracefully
         if (prsRes.ok) {
           allPRs = await prsRes.json();
+          // Enrich PRs with source_repo from their diffs (for preview links)
+          await Promise.all(allPRs.map(async pr => {
+            try {
+              const filesRes = await fetch(`https://api.github.com/repos/${REGISTRY_REPO}/pulls/${pr.number}/files`);
+              if (!filesRes.ok) return;
+              const files = await filesRes.json();
+              const indexFile = files.find(f => f.filename === 'index.json');
+              if (!indexFile || !indexFile.patch) return;
+              // Extract source_repo and source_path from added lines
+              const repoMatch = indexFile.patch.match(/^\+.*"source_repo"\s*:\s*"([^"]+)"/m);
+              const pathMatch = indexFile.patch.match(/^\+.*"source_path"\s*:\s*"([^"]+)"/m);
+              if (repoMatch) {
+                pr._source_repo = repoMatch[1];
+                pr._source_path = pathMatch ? pathMatch[1] : null;
+              }
+            } catch (e) {}
+          }));
         } else {
           allPRs = [];
         }
@@ -796,6 +827,12 @@
       container.innerHTML = allPRs.map(pr => {
         const date = new Date(pr.created_at);
         const ago = timeAgo(date);
+        let previewLink = '';
+        if (pr._source_repo) {
+          const previewPath = pr._source_repo + (pr._source_path ? '/' + pr._source_path : '');
+          const previewUrl = `${PREVIEW_BASE}#${encodeURIComponent(previewPath)}`;
+          previewLink = `<a class="pr-preview-link" href="${esc(previewUrl)}" target="_blank" onclick="event.stopPropagation()">preview &rarr;</a>`;
+        }
         return `
           <a class="pr-card" href="${esc(pr.html_url)}" target="_blank">
             <div class="pr-icon">${PR_SVG}</div>
@@ -805,6 +842,7 @@
                 #${pr.number} opened ${ago} by ${esc(pr.user.login)}
               </div>
             </div>
+            ${previewLink}
             <div class="pr-badge">Open</div>
           </a>
         `;
