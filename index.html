@@ -151,6 +151,7 @@
 
     .filter-btn:hover { border-color: #ffab01; color: #e6edf3; }
     .filter-btn.active { border-color: #ffab01; color: #ffab01; background: #1a1a0d; }
+    .filter-count { opacity: 0.5; }
 
     .filter-group {
       max-width: 900px;
@@ -586,10 +587,10 @@
 
   <div id="filter-section" style="display:none;">
     <div class="filter-bar">
-      <button class="filter-btn active" data-filter="all">All</button>
-      <button class="filter-btn" data-filter="official">Official</button>
-      <button class="filter-btn" data-filter="verified">Verified</button>
-      <button class="filter-btn" data-filter="community">Community</button>
+      <button class="filter-btn active" data-filter="all">All <span class="filter-count"></span></button>
+      <button class="filter-btn" data-filter="official">Official <span class="filter-count"></span></button>
+      <button class="filter-btn" data-filter="verified">Verified <span class="filter-count"></span></button>
+      <button class="filter-btn" data-filter="community">Community <span class="filter-count"></span></button>
     </div>
     <div id="tag-filters" class="filter-group" style="display:none;">
       <span class="filter-group-label">Tags</span>
@@ -773,6 +774,16 @@
     }
 
     function buildFilterPills() {
+      // Update tier button counts
+      const tierCounts = { all: allPacks.length };
+      for (const p of allPacks) {
+        tierCounts[p.trust_tier] = (tierCounts[p.trust_tier] || 0) + 1;
+      }
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        const count = tierCounts[btn.dataset.filter] || 0;
+        btn.querySelector('.filter-count').textContent = count;
+      });
+
       // Count tags and langs from tier-filtered packs
       let filtered = allPacks;
       if (currentFilter !== 'all') {
@@ -801,7 +812,8 @@
       const tagContainer = document.getElementById('tag-pills');
       const tagSection = document.getElementById('tag-filters');
       tagSection.style.display = sortedTags.length ? 'flex' : 'none';
-      tagContainer.innerHTML = `<button class="tag-pill${!activeTag ? ' active' : ''}" data-tag="">All</button>` + sortedTags.map(([tag, count]) =>
+      const totalTags = sortedTags.reduce((s, [, c]) => s + c, 0);
+      tagContainer.innerHTML = `<button class="tag-pill${!activeTag ? ' active' : ''}" data-tag="">All <span style="opacity:0.5">${totalTags}</span></button>` + sortedTags.map(([tag, count]) =>
         `<button class="tag-pill${activeTag === tag ? ' active' : ''}" data-tag="${esc(tag)}">${esc(tag)} <span style="opacity:0.5">${count}</span></button>`
       ).join('');
 
@@ -809,7 +821,8 @@
       const langContainer = document.getElementById('lang-pills');
       const langSection = document.getElementById('lang-filters');
       langSection.style.display = sortedLangs.length ? 'flex' : 'none';
-      langContainer.innerHTML = `<button class="lang-pill${!activeLang ? ' active' : ''}" data-lang="">All</button>` + sortedLangs.map(([lang, count]) =>
+      const totalLangs = sortedLangs.reduce((s, [, c]) => s + c, 0);
+      langContainer.innerHTML = `<button class="lang-pill${!activeLang ? ' active' : ''}" data-lang="">All <span style="opacity:0.5">${totalLangs}</span></button>` + sortedLangs.map(([lang, count]) =>
         `<button class="lang-pill${activeLang === lang ? ' active' : ''}" data-lang="${esc(lang)}">${esc(langName(lang))} <span style="opacity:0.5">${count}</span></button>`
       ).join('');
     }
