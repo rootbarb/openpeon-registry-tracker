@@ -676,7 +676,7 @@
     document.getElementById('tag-pills').addEventListener('click', e => {
       const pill = e.target.closest('.tag-pill');
       if (!pill) return;
-      const tag = pill.dataset.tag;
+      const tag = pill.dataset.tag || null;
       if (activeTag === tag) {
         activeTag = null;
       } else {
@@ -690,7 +690,7 @@
     document.getElementById('lang-pills').addEventListener('click', e => {
       const pill = e.target.closest('.lang-pill');
       if (!pill) return;
-      const lang = pill.dataset.lang;
+      const lang = pill.dataset.lang || null;
       if (activeLang === lang) {
         activeLang = null;
       } else {
@@ -801,7 +801,7 @@
       const tagContainer = document.getElementById('tag-pills');
       const tagSection = document.getElementById('tag-filters');
       tagSection.style.display = sortedTags.length ? 'flex' : 'none';
-      tagContainer.innerHTML = sortedTags.map(([tag, count]) =>
+      tagContainer.innerHTML = `<button class="tag-pill${!activeTag ? ' active' : ''}" data-tag="">All</button>` + sortedTags.map(([tag, count]) =>
         `<button class="tag-pill${activeTag === tag ? ' active' : ''}" data-tag="${esc(tag)}">${esc(tag)} <span style="opacity:0.5">${count}</span></button>`
       ).join('');
 
@@ -809,7 +809,7 @@
       const langContainer = document.getElementById('lang-pills');
       const langSection = document.getElementById('lang-filters');
       langSection.style.display = sortedLangs.length ? 'flex' : 'none';
-      langContainer.innerHTML = sortedLangs.map(([lang, count]) =>
+      langContainer.innerHTML = `<button class="lang-pill${!activeLang ? ' active' : ''}" data-lang="">All</button>` + sortedLangs.map(([lang, count]) =>
         `<button class="lang-pill${activeLang === lang ? ' active' : ''}" data-lang="${esc(lang)}">${esc(langName(lang))} <span style="opacity:0.5">${count}</span></button>`
       ).join('');
     }
